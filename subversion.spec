@@ -53,10 +53,10 @@
 %{?scl:
 %if 0%{?rhel} >= 7 || 0%{?fedora} >= 19
 %filter_from_provides s|pkgconfig|%{?scl_prefix}pkgconfig|g;s|libsvn.*\.so.*||g;s|mod_.*||g;s|perl.*||g;s|libtool.*||g;s|.*org\.apache\.subversion\.javahl.*||g;s|.*\.*\.so.*||g;
-%filter_from_requires s|pkgconfig|%{?scl_prefix}pkgconfig|g;s|libsvn.*\.so.*||g;s|mod_.*||g;s|perl.*||g;s|libtool.*||g;s|.*org\.apache\.subversion\.javahl.*||g;
+%filter_from_requires s|pkgconfig|%{?scl_prefix}pkgconfig|g;s|libsvn.*\.so.*||g;s|mod_.*||g;s|perl.*||g;s|libtool.*||g;s|.*org\.apache\.subversion\.javahl.*||g;s|libserf.*||g;
 %else
 %filter_from_provides s|.*pkgconfig.*||g;s|libsvn.*\.so.*||g;s|mod_.*||g;s|perl.*||g;s|libruby.*\.so.*||g;s|libtool.*||g;s|.*org\.apache\.subversion\.javahl.*||g;s|.*\.*\.so.*||g;
-%filter_from_requires s|.*pkgconfig.*||g;s|libsvn.*\.so.*||g;s|mod_.*||g;s|perl.*||g;s|libruby.*\.so.*||g;s|libtool.*||g;s|.*org\.apache\.subversion\.javahl.*||g;s|python.*abi.*||g;
+%filter_from_requires s|.*pkgconfig.*||g;s|libsvn.*\.so.*||g;s|mod_.*||g;s|perl.*||g;s|libruby.*\.so.*||g;s|libtool.*||g;s|.*org\.apache\.subversion\.javahl.*||g;s|python.*abi.*||g;s|libserf.*||g;
 %endif
 %filter_setup
 }
@@ -64,7 +64,7 @@
 Summary: A Modern Concurrent Version Control System
 Name: %{?scl_prefix}subversion
 Version: 1.9.3
-Release: 1.5%{?dist}
+Release: 1.9%{?dist}
 License: ASL 2.0
 Group: Development/Tools
 URL: http://subversion.apache.org/
@@ -102,14 +102,17 @@ BuildRequires: python27-build
 %endif
 BuildRequires: swig >= 1.3.24, gettext
 BuildRequires: apr-devel >= 1.3.0, apr-util-devel >= 1.3.0
-# libserf comes from EPEL, not avail. in CBS...
+# libserf comes from EPEL, not avail. in CBS... so provide our own.
 %if %{!?scl:1}0
 %if 0%{?rhel} >= 7 || 0%{?fedora} >= 19
 BuildRequires: libserf-devel >= 1.3.0
 %else
 BuildRequires: libserf-devel >= 1.2.1
 %endif
+%else
+BuildRequires: %{?scl_prefix}libserf-devel >=  1.3.9
 %endif
+
 BuildRequires: cyrus-sasl-devel
 BuildRequires: sqlite-devel >= 3.4.0, file-devel
 %if %{use_systemd}
@@ -154,7 +157,12 @@ Conflicts: apr%{?_isa} < 1.3.0
 # Enforced at run-time by ra_serf
 Conflicts: libserf%{?_isa} < 1.3.0
 %endif
+%else
+Requires: %{?scl_prefix}libserf >= 1.3.9
+Requires: %{?scl}-runtime
 %endif
+
+
 
 %description libs
 The subversion-libs package includes the essential shared libraries
@@ -367,6 +375,9 @@ export PERL_LOCAL_LIB_ROOT=""
 export PERL_MM_OPT=""
 %endif
 
+%if %{?scl:1}0
+sed -i 's|serf_prefix/lib|serf_prefix/%{_lib}|' configure
+%endif
 
 %configure --with-apr=%{svn_prefix} --with-apr-util=%{svn_prefix} \
         --disable-debug \
@@ -375,6 +386,8 @@ export PERL_MM_OPT=""
 %if 0%{?rhel} >= 7 || 0%{?fedora} >= 19
 	--with-serf=%{svn_prefix} \
 %endif
+%else
+        --with-serf=%{_scl_root}/usr \
 %endif
         --with-ruby-sitedir=%{ruby_vendorarchdir} \
         --with-ruby-test-verbose=verbose \
@@ -707,6 +720,10 @@ fi
 %endif
 
 %changelog
+* Wed Feb 15 2017 Jaroslaw Polok <jaroslaw.polok@cern.ch> - 1.9.3-1.9
+- rebuild with Software Collections libserf.
+- add missing require for scl-runtime package.
+
 * Mon Mar 07 2016 Jaroslaw Polok <jaroslaw.polok@cern.ch> - 1.9.3-1.5
 - repackaged as Software Collection for CentOS 6/7
 
