@@ -64,7 +64,7 @@
 Summary: A Modern Concurrent Version Control System
 Name: %{?scl_prefix}subversion
 Version: 1.9.3
-Release: 1.9%{?dist}
+Release: 1.10%{?dist}
 License: ASL 2.0
 Group: Development/Tools
 URL: http://subversion.apache.org/
@@ -88,6 +88,9 @@ Patch4: subversion-1.8.0-rubybind.patch
 Patch8: subversion-1.8.5-swigplWall.patch
 Patch10: subversion-1.8.13-swigpython.patch
 Patch11: subversion-1.8.11-ruby22-fixes.rb
+
+Patch100: subversion-1.9.X-CVE-2017-9800.patch
+
 BuildRequires: autoconf, libtool, texinfo, which
 BuildRequires: perl
 BuildRequires: gcc-c++
@@ -315,6 +318,8 @@ ln -s sqlite-amalgamation-3071501 sqlite-amalgamation
 %patch8 -p1 -b .swigplWall
 %patch10 -p1 -b .swigpython
 %patch11 -p0 -b .ruby22-fixes
+
+%patch100 -p0 -b .cve-2017-9800
 
 %build
 
@@ -720,6 +725,9 @@ fi
 %endif
 
 %changelog
+* Fri Aug 11 2017 Jaroslaw Polok <jaroslaw.polok@cern.ch> - 1.9.3-1.10
+- CVE-2017-9800 security fix.
+
 * Wed Feb 15 2017 Jaroslaw Polok <jaroslaw.polok@cern.ch> - 1.9.3-1.9
 - rebuild with Software Collections libserf.
 - add missing require for scl-runtime package.
